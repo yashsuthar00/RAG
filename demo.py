@@ -1,11 +1,11 @@
 from dotenv import load_dotenv
 import os
 from langchain_mongodb import MongoDBAtlasVectorSearch
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
-load_dotenv("/app/.env")
+load_dotenv('.env')
 
-db_name = "langchain_demo"
+db_name = "RAG-demo"
 collection_name = "chunked_data"
 index = "vector_index"
 connection_string = os.getenv("CONNECTION_STRING")

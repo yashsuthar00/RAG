@@ -4,12 +4,13 @@ and store them in MongoDB Atlas, and run similarity queries against the vector s
 
 ## Requirements
 
+- **Python 3.11** (required): Python 3.14 is not supported by PyTorch and LangChain yet. If you get DLL errors or Pydantic warnings, install Python 3.11 and use it for the venv.
 - Recommended Python: 3.10 or 3.11 (some ML libraries may not yet provide wheels for very new
-	CPython releases). If you run into build/wheel errors, create a venv with Python 3.11.
+  CPython releases). If you run into build/wheel errors, create a venv with Python 3.11.
 - A MongoDB Atlas cluster (or a locally running MongoDB) and a connection string with write access.
 - A `cv/cv.pdf` file in the repository (the ingestion script reads `./cv/cv.pdf`).
 - The project includes `requirements.txt` with the expected dependencies. Use it to install exact
-	versions.
+  versions.
 
 ## Quick setup (Windows PowerShell)
 Open VS Code terminal (PowerShell) in the project root `C:\Users\yashs\Desktop\yash\RAG` and run the following steps.
@@ -77,8 +78,14 @@ installing `torch` from the official PyTorch site which provides compatible whee
 Create a file named `.env` in the project root (or set the environment variable directly). At minimum add:
 
 ```text
-CONNECTION_STRING="your-mongodb-connection-string"
+CONNECTION_STRING="your-mongodb-atlas-connection-string"
+HUGGINGFACEHUB_API_TOKEN="your-huggingface-api-token"
 ```
+
+To get a Hugging Face API token:
+1. Go to https://huggingface.co/settings/tokens
+2. Create a new token (type: Read)
+3. Copy the token and add it to your `.env` file as shown above.
 
 Notes about `.env` and code paths:
 - The scripts call `load_dotenv('/app/.env')` which expects `/app/.env` (a container path). On Windows you can either:
@@ -119,10 +126,12 @@ python retriver.py
 
 ## Troubleshooting
 
+- **DLL errors or Pydantic V1 warnings with Python 3.14**: PyTorch and LangChain don't support Python 3.14 yet. Install Python 3.11 from https://www.python.org/downloads/windows/ and create a new venv with it: `py -3.11 -m venv .venv311`. Then activate and reinstall dependencies.
+- **DLL initialization failed for torch**: This is common on Windows. Install the Microsoft Visual C++ Redistributable for Visual Studio 2015-2022 from https://aka.ms/vs/17/release/vc_redist.x64.exe. Then reinstall PyTorch: `python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu` (for CPU-only; check https://pytorch.org/get-started/locally/ for CUDA versions).
 - Execution policy errors when activating the venv: run the `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force` command once and restart the terminal.
 - If pip fails to find a package (e.g. `langchain-mongodb`) check the exact PyPI package name or use `pip search` / the package docs.
 - If you get binary wheel / build errors (commonly for `torch`, `sentence-transformers`):
-	- Prefer Python 3.11 or 3.10, and install `torch` using the official instructions from PyTorch (they provide prebuilt wheels for Windows). Example for CUDA/CPU options available at https://pytorch.org/get-started/locally/.
+  - Prefer Python 3.11 or 3.10, and install `torch` using the official instructions from PyTorch (they provide prebuilt wheels for Windows). Example for CUDA/CPU options available at https://pytorch.org/get-started/locally/.
 - If the scripts attempt to use a large LLM from Hugging Face you may need more RAM or to change the model to a small CPU-friendly option.
 
 ## Save the environment

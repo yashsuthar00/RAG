@@ -1,14 +1,14 @@
 import os
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from create_metadata_tagger import create_metadata_tagger
 from langchain_mongodb import MongoDBAtlasVectorSearch
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import HuggingFaceHub
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEndpoint
 from pymongo import MongoClient
 
-load_dotenv('/app/.env')
+load_dotenv('.env')
 
 # Model names
 embedding_model_name = "sentence-transformers/all-MiniLM-L6-v2"
@@ -20,6 +20,7 @@ collection = client["RAG-demo"]["chunked_data"]
 
 print("Deleting the collection before adding new data")
 collection.delete_many({})
+print("Deleted the collection before adding new data")
 
 # Load and clean PDF
 loader = PyPDFLoader("./cv/cv.pdf")
@@ -40,7 +41,7 @@ schema = {
 }
 
 print("Creating metadata for the documents")
-llm = HuggingFaceHub(repo_id=llm_repo_id, model_kwargs={"temperature": 0})
+llm = HuggingFaceEndpoint(repo_id=llm_repo_id, temperature=0, huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN"))
 document_transformer = create_metadata_tagger(schema, llm)
 docs = document_transformer.transform_documents(cleaned_pages)
 split_docs = text_splitter.split_documents(docs)
