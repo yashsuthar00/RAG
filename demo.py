@@ -27,6 +27,5 @@ def query_data(query):
     )
     results = retriever.invoke(query)
     return results
-
 # Example query
 print(query_data("When did MongoDB begin supporting multi-document transactions?"))

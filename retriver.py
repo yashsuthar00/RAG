@@ -5,23 +5,25 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import PromptTemplate
 from langchain_mongodb import MongoDBAtlasVectorSearch
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_huggingface import HuggingFaceEndpoint
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv('.env')
 
-db_name = "langchain_demo"
+db_name = "RAG-demo"
 collection_name = "chunked_data"
 index = "vector_index"
 connection_string = os.getenv("CONNECTION_STRING")
 
-# Free model names
+# Model names
 embedding_model_name = "sentence-transformers/all-MiniLM-L6-v2"
-llm_repo_id = "HuggingFaceH4/zephyr-7b-beta"
+gemini_model = "gemini-2.0-flash-exp"  # or "gemini-pro" for stable version
 
 # Embeddings
+print("Loading embeddings model...")
 embeddings = HuggingFaceEmbeddings(model_name=embedding_model_name)
 
 # Connect to MongoDB Atlas
+print("Connecting to MongoDB Atlas...")
 vectorStore = MongoDBAtlasVectorSearch.from_connection_string(
     connection_string,
     f"{db_name}.{collection_name}",
@@ -30,6 +32,7 @@ vectorStore = MongoDBAtlasVectorSearch.from_connection_string(
 )
 
 def query_data(query):
+    print(f"\nSearching for: {query}")
     retriever = vectorStore.as_retriever(
         search_type="similarity",
         search_kwargs={"k": 3},
@@ -52,8 +55,12 @@ def query_data(query):
         "question": RunnablePassthrough()
     }
 
-    # Free LLM from Hugging Face
-    llm = HuggingFaceEndpoint(repo_id=llm_repo_id, temperature=0, huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN"))
+    # Google Gemini LLM
+    llm = ChatGoogleGenerativeAI(
+        model=gemini_model,
+        temperature=0.1,
+        google_api_key=os.getenv("GOOGLE_API_KEY")
+    )
 
     response_parser = StrOutputParser()
 
@@ -63,12 +70,18 @@ def query_data(query):
     print(answer)
 
 # Test queries
-question = "When did MongoDB begin supporting multi-document transactions?"
+question = "Is this person's name is parikshit? and if not.. then what is their name."
 print(f"Running query: {question}")
 query_data(question)
 
-print("=========================================================")
+print("=" * 80)
 
-question = "Why is the sky blue?"
+question = "Provide the education of the person in detial with dates and all."
+print(f"Running query: {question}")
+query_data(question)
+
+print("=" * 80)
+
+question = "Also provide the skills in detial. And also just name the projects only."
 print(f"Running query: {question}")
 query_data(question)

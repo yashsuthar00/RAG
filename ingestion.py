@@ -12,7 +12,7 @@ load_dotenv('.env')
 
 # Model names
 embedding_model_name = "sentence-transformers/all-MiniLM-L6-v2"
-llm_repo_id = "HuggingFaceH4/zephyr-7b-beta"
+llm_repo_id = "google/flan-t5-base"
 
 # MongoDB setup
 client = MongoClient(os.getenv("CONNECTION_STRING"))
@@ -40,11 +40,17 @@ schema = {
     "required": ["title", "keywords", "hasCode"],
 }
 
-print("Creating metadata for the documents")
-llm = HuggingFaceEndpoint(repo_id=llm_repo_id, temperature=0, huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN"))
-document_transformer = create_metadata_tagger(schema, llm)
-docs = document_transformer.transform_documents(cleaned_pages)
-split_docs = text_splitter.split_documents(docs)
+print("Creating metadata for the documents (skipping LLM tagging for now)")
+# Skip the LLM-based metadata tagging to avoid API issues
+# Just add basic metadata manually
+for i, page in enumerate(cleaned_pages):
+    page.metadata.update({
+        "title": f"Document page {i+1}",
+        "keywords": ["document", "pdf"],
+        "hasCode": False
+    })
+
+split_docs = text_splitter.split_documents(cleaned_pages)
 
 # Embeddings
 print("Generating embeddings using Hugging Face model")
